@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	carrier := carrier.K8sObjAntCarrier{}
-	carrier.Set("test-key", "test-value")
-	fmt.Println(carrier.Get("test-key"))
+	koc := carrier.K8sObjAntCarrier{}
+	koc.Set(carrier.KOC_PREFIX+"test-key", "test-value")
+	fmt.Println(koc.Get(carrier.KOC_PREFIX + "test-key"))
 }
