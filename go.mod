@@ -2,7 +2,10 @@ module github.com/eppppi/k8s-object-carrier
 
 go 1.20
 
-require k8s.io/apimachinery v0.28.1
+require (
+	github.com/google/uuid v1.3.0
+	k8s.io/apimachinery v0.28.1
+)
 
 require (
 	github.com/go-logr/logr v1.2.4 // indirect
