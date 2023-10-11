@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -14,10 +15,24 @@ func isTraceKey(key string) bool {
 }
 
 // OpenTelemetry carrier using annotation of kubernetes object
-type K8sObjAntCarrier metav1.ObjectMeta
+type K8sObjAntCarrier struct {
+	metav1.Object
+}
 
-func (objMeta *K8sObjAntCarrier) Get(key string) string {
-	annotations := (*metav1.ObjectMeta)(objMeta).GetAnnotations()
+func NewK8sAntCarrierFromInterface(objInterface interface{}) (*K8sObjAntCarrier, error) {
+	obj, err := meta.Accessor(objInterface)
+	if err != nil {
+		return nil, err
+	}
+	return NewK8sAntCarrierFromObj(obj)
+}
+
+func NewK8sAntCarrierFromObj(obj metav1.Object) (*K8sObjAntCarrier, error) {
+	return &K8sObjAntCarrier{obj}, nil
+}
+
+func (objCarrier *K8sObjAntCarrier) Get(key string) string {
+	annotations := objCarrier.GetAnnotations()
 	if val, ok := annotations[key]; ok {
 		return val
 	} else {
@@ -26,15 +41,15 @@ func (objMeta *K8sObjAntCarrier) Get(key string) string {
 	}
 }
 
-func (objMeta *K8sObjAntCarrier) Set(key string, value string) {
+func (objCarrier *K8sObjAntCarrier) Set(key string, value string) {
 	if !isTraceKey(key) {
 		log.Printf("warning: key %s is invalid for trace key", key)
 	}
-	(*metav1.ObjectMeta)(objMeta).SetAnnotations(map[string]string{key: value})
+	objCarrier.SetAnnotations(map[string]string{key: value})
 }
 
-func (objMeta *K8sObjAntCarrier) Keys() []string {
-	annotations := (*metav1.ObjectMeta)(objMeta).GetAnnotations()
+func (objCarrier *K8sObjAntCarrier) Keys() []string {
+	annotations := objCarrier.GetAnnotations()
 	keys := make([]string, 0, len(annotations))
 	for k := range annotations {
 		if isTraceKey(k) {
